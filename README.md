@@ -1,30 +1,48 @@
 # Member Admin - WordPress Plugin
 
+![WordPress](https://img.shields.io/badge/WordPress-6.8+-blue.svg)
+![PHP](https://img.shields.io/badge/PHP-8.0+-purple.svg)
+![License](https://img.shields.io/badge/License-GPL--2.0-green.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)
+
 Ett WordPress-plugin för att anpassa användar-listan med ACF-fält, kompatibelt med WordPress 6.8.1.
 
-## Funktioner
+## 🚀 Funktioner
 
-- **Anpassa användar-listan**: Lägg till ACF-fält som kolumner i användar-listan
-- **Dropdown-val**: Välj fält baserat på upptäckta ACF-fält
-- **Anpassa-knapp**: Enkel konfiguration direkt från användar-listan
-- **Typanpassad visning**: Fälten presenteras enligt sin ACF-typ
-- **Sorterbara kolumner**: Vissa fälttyper kan sorteras
-- **Responsiv design**: Fungerar på både desktop och mobil
+- ✅ **Anpassa användar-listan**: Lägg till ACF-fält som kolumner i användar-listan
+- ✅ **Dropdown-val**: Välj fält baserat på upptäckta ACF-fält
+- ✅ **Anpassa-knapp**: Enkel konfiguration direkt från användar-listan
+- ✅ **Typanpassad visning**: Fälten presenteras enligt sin ACF-typ
+- ✅ **Sorterbara kolumner**: Vissa fälttyper kan sorteras
+- ✅ **Responsiv design**: Fungerar på både desktop och mobil
 
-## Krav
+## 📋 Krav
 
 - WordPress 6.8 eller senare
 - PHP 8.0 eller senare
 - Advanced Custom Fields (ACF) plugin
 
-## Installation
+## 📦 Installation
 
+### Via WordPress Admin (Rekommenderat)
+1. **Ladda ner** senaste [release](https://github.com/apayerl/wp-member-admin/releases) som ZIP-fil
+2. Gå till **Plugins** → **Lägg till nytt** → **Ladda upp plugin**
+3. Välj ZIP-filen och klicka **"Installera nu"**
+4. **Aktivera** pluginet
+5. Se till att **Advanced Custom Fields (ACF)** är installerat och aktiverat
+
+### Via FTP/Filhanterare
 1. Ladda upp plugin-filerna till `/wp-content/plugins/member-admin/` mappen
 2. Aktivera pluginet genom 'Plugins' menyn i WordPress
 3. Se till att Advanced Custom Fields (ACF) plugin är installerat och aktiverat
-4. Skapa ACF-fältgrupper som är kopplade till användare
 
-## Användning
+### Via Git (För utvecklare)
+```bash
+cd /wp-content/plugins/
+git clone https://github.com/apayerl/wp-member-admin.git
+```
+
+## 🎯 Användning
 
 1. Gå till **Användare** i WordPress admin
 2. Klicka på **"Anpassa kolumner"** knappen högst upp på sidan
@@ -32,7 +50,7 @@ Ett WordPress-plugin för att anpassa användar-listan med ACF-fält, kompatibel
 4. Klicka **"Spara ändringar"**
 5. Användar-listan kommer nu att visa de valda fälten som kolumner
 
-## ACF-fälttyper som stöds
+## 🔧 ACF-fälttyper som stöds
 
 Pluginet stöder alla vanliga ACF-fälttyper:
 
@@ -46,7 +64,7 @@ Pluginet stöder alla vanliga ACF-fälttyper:
 - User (visar användarnamn)
 - Post Object (visar inläggstitel)
 
-## Sorterbara fält
+## 📊 Sorterbara fält
 
 Följande fälttyper kan sorteras:
 - Text
@@ -58,7 +76,7 @@ Följande fälttyper kan sorteras:
 - Radio
 - True/False
 
-## Teknisk information
+## 🏗️ Teknisk information
 
 ### Filstruktur
 ```
@@ -68,6 +86,8 @@ member-admin/
 │   ├── class-acf-field-manager.php
 │   ├── class-user-list-customizer.php
 │   └── class-admin-interface.php
+├── languages/
+│   └── member-admin.pot
 └── README.md
 ```
 
@@ -84,7 +104,7 @@ member-admin/
 - Escaping av utdata
 - Sanitering av indata
 
-## Felsökning
+## 🐛 Felsökning
 
 ### Inga fält visas i dropdown
 - Kontrollera att ACF är installerat och aktiverat
@@ -101,9 +121,17 @@ member-admin/
 - Kontrollera att PHP-versionen är 8.0 eller senare
 - Se till att ACF är installerat
 
-## Utveckling
+## 🛠️ Utveckling
 
 Pluginet använder Singleton-pattern för alla huvudklasser och följer WordPress plugin development best practices.
+
+### Kör lokalt
+```bash
+git clone https://github.com/apayerl/wp-member-admin.git
+cd member-admin
+# Kopiera till din WordPress installation
+cp -r . /path/to/wordpress/wp-content/plugins/member-admin/
+```
 
 ### Hooks som används
 - `manage_users_columns` - Lägger till kolumner
@@ -115,10 +143,33 @@ Pluginet använder Singleton-pattern för alla huvudklasser och följer WordPres
 - `member_admin_get_fields` - Hämtar tillgängliga fält
 - `member_admin_update_fields` - Uppdaterar aktiverade fält
 
-## Licens
+## 🤝 Bidra
 
-GPL v2 or later
+1. Fork projektet
+2. Skapa en feature branch (`git checkout -b feature/ny-funktion`)
+3. Committa dina ändringar (`git commit -am 'Add: Ny funktion'`)
+4. Pusha till branchen (`git push origin feature/ny-funktion`)
+5. Öppna en Pull Request
 
-## Support
+## 📝 Changelog
 
-För support, skapa en issue i projektets repository eller kontakta utvecklaren. 
+### [1.0.0] - 2024-XX-XX
+- Initial release
+- Anpassa användar-listan med ACF-fält
+- Modal interface för fältval
+- Stöd för alla vanliga ACF-fälttyper
+- Sorterbara kolumner
+
+## 📄 Licens
+
+GPL v2 or later - se [LICENSE](LICENSE) fil för detaljer.
+
+## 💬 Support
+
+- 🐛 **Bug reports**: [GitHub Issues](https://github.com/apayerl/wp-member-admin/issues)
+- 💡 **Feature requests**: [GitHub Issues](https://github.com/apayerl/wp-member-admin/issues)
+- 📧 **Support**: Skapa en issue i projektets repository
+
+## ⭐ Gillar du pluginet?
+
+Om du tycker om Member Admin, ge det en stjärna på GitHub! ⭐ 
