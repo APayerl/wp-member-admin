@@ -10,7 +10,7 @@
  * Domain Path: /languages
  * Requires at least: 6.8
  * Tested up to: 6.8.1
- * Requires PHP: 8.0
+ * Requires PHP: 7.4
  */
 
 // Förhindra direkt åtkomst
@@ -34,7 +34,7 @@ class MemberAdmin {
     /**
      * Singleton pattern
      */
-    public static function getInstance(): MemberAdmin {
+    public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -51,7 +51,7 @@ class MemberAdmin {
     /**
      * Initialisera plugin
      */
-    public function init(): void {
+    public function init() {
         // Ladda textdomän först
         $this->loadTextDomain();
         
@@ -71,14 +71,14 @@ class MemberAdmin {
     /**
      * Kontrollera om beroenden är uppfyllda
      */
-    private function isDependenciesMet(): bool {
+    private function isDependenciesMet() {
         return class_exists('ACF') && function_exists('get_field');
     }
     
     /**
      * Visa meddelande om saknade beroenden
      */
-    public function showDependencyNotice(): void {
+    public function showDependencyNotice() {
         echo '<div class="notice notice-error"><p>';
         echo __('Member Admin kräver Advanced Custom Fields (ACF) plugin för att fungera.', 'member-admin');
         echo '</p></div>';
@@ -87,14 +87,14 @@ class MemberAdmin {
     /**
      * Ladda textdomän
      */
-    private function loadTextDomain(): void {
+    private function loadTextDomain() {
         load_plugin_textdomain('member-admin', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
     
     /**
      * Ladda klasser i rätt ordning
      */
-    private function loadClasses(): void {
+    private function loadClasses() {
         // Ladda i rätt ordning - dependencies först
         require_once MEMBER_ADMIN_PLUGIN_DIR . 'includes/class-acf-field-manager.php';
         require_once MEMBER_ADMIN_PLUGIN_DIR . 'includes/class-user-list-customizer.php';
@@ -104,7 +104,7 @@ class MemberAdmin {
     /**
      * Initialisera klasser
      */
-    public function initializeClasses(): void {
+    public function initializeClasses() {
         // Initialisera endast om vi är i admin och har rätt behörigheter
         if (!is_admin()) {
             return;
@@ -126,7 +126,7 @@ register_deactivation_hook(__FILE__, 'member_admin_deactivate');
 /**
  * Aktivering av plugin
  */
-function member_admin_activate(): void {
+function member_admin_activate() {
     // Kontrollera WordPress-version
     if (version_compare(get_bloginfo('version'), '6.8', '<')) {
         deactivate_plugins(plugin_basename(__FILE__));
@@ -134,9 +134,9 @@ function member_admin_activate(): void {
     }
     
     // Kontrollera PHP-version
-    if (version_compare(PHP_VERSION, '8.0', '<')) {
+    if (version_compare(PHP_VERSION, '7.4', '<')) {
         deactivate_plugins(plugin_basename(__FILE__));
-        wp_die(__('Member Admin kräver PHP 8.0 eller senare.', 'member-admin'));
+        wp_die(__('Member Admin kräver PHP 7.4 eller senare.', 'member-admin'));
     }
     
     // Skapa standardinställningar
@@ -153,7 +153,7 @@ function member_admin_activate(): void {
 /**
  * Avaktivering av plugin
  */
-function member_admin_deactivate(): void {
+function member_admin_deactivate() {
     // Rensa eventuella tillfälliga data
     delete_transient('member_admin_acf_fields');
 } 

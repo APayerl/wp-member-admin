@@ -1,7 +1,7 @@
 # Member Admin - WordPress Plugin
 
 ![WordPress](https://img.shields.io/badge/WordPress-6.8+-blue.svg)
-![PHP](https://img.shields.io/badge/PHP-8.0+-purple.svg)
+![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)
 ![License](https://img.shields.io/badge/License-GPL--2.0-green.svg)
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)
 
@@ -19,7 +19,7 @@ Ett WordPress-plugin för att anpassa användar-listan med ACF-fält, kompatibel
 ## 📋 Krav
 
 - WordPress 6.8 eller senare
-- PHP 8.0 eller senare
+- PHP 7.4 eller senare
 - Advanced Custom Fields (ACF) plugin
 
 ## 📦 Installation
@@ -118,7 +118,7 @@ member-admin/
 
 ### Plugin fungerar inte
 - Kontrollera att WordPress-versionen är 6.8 eller senare
-- Kontrollera att PHP-versionen är 8.0 eller senare
+- Kontrollera att PHP-versionen är 7.4 eller senare
 - Se till att ACF är installerat
 
 ## 🛠️ Utveckling

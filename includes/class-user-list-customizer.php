@@ -14,12 +14,12 @@ if (!defined('ABSPATH')) {
 class MemberAdminUserListCustomizer {
     
     private static $instance = null;
-    private MemberAdminACFFieldManager $fieldManager;
+    private $fieldManager;
     
     /**
      * Singleton pattern
      */
-    public static function getInstance(): MemberAdminUserListCustomizer {
+    public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -42,7 +42,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Initialisera hooks
      */
-    private function init(): void {
+    private function init() {
         add_filter('manage_users_columns', [$this, 'addCustomColumns']);
         add_filter('manage_users_custom_column', [$this, 'displayCustomColumnContent'], 10, 3);
         add_filter('manage_users_sortable_columns', [$this, 'makeColumnsSortable']);
@@ -55,7 +55,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Lägg till anpassade kolumner till användar-listan
      */
-    public function addCustomColumns(array $columns): array {
+    public function addCustomColumns($columns) {
         $settings = get_option('member_admin_settings', ['enabled_fields' => []]);
         $enabledFields = $settings['enabled_fields'];
         
@@ -80,7 +80,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Visa innehåll för anpassade kolumner
      */
-    public function displayCustomColumnContent(string $output, string $columnName, int $userId): string {
+    public function displayCustomColumnContent($output, $columnName, $userId) {
         if (strpos($columnName, 'member_admin_') !== 0) {
             return $output;
         }
@@ -103,7 +103,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Gör kolumner sorterbara
      */
-    public function makeColumnsSortable(array $columns): array {
+    public function makeColumnsSortable($columns) {
         $settings = get_option('member_admin_settings', ['enabled_fields' => []]);
         $enabledFields = $settings['enabled_fields'];
         
@@ -131,7 +131,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Kontrollera om fälttyp är sorterbar
      */
-    private function isFieldSortable(string $fieldType): bool {
+    private function isFieldSortable($fieldType) {
         $sortableTypes = [
             'text',
             'number',
@@ -149,7 +149,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Hantera sortering av kolumner
      */
-    public function handleColumnSorting(WP_User_Query $query): void {
+    public function handleColumnSorting(WP_User_Query $query) {
         if (!is_admin() || !$query->is_main_query()) {
             return;
         }
@@ -198,7 +198,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Lägg till anpassad CSS för bättre visning
      */
-    public function addCustomCSS(): void {
+    public function addCustomCSS() {
         echo '<style>
             .member-admin-column {
                 max-width: 150px;
@@ -228,14 +228,14 @@ class MemberAdminUserListCustomizer {
     /**
      * Hämta tillgängliga ACF-fält för dropdown
      */
-    public function getAvailableFields(): array {
+    public function getAvailableFields() {
         return $this->fieldManager->getUserACFFields();
     }
     
     /**
      * Uppdatera aktiverade fält
      */
-    public function updateEnabledFields(array $fieldKeys): bool {
+    public function updateEnabledFields($fieldKeys) {
         $settings = get_option('member_admin_settings', []);
         $settings['enabled_fields'] = array_values(array_unique($fieldKeys));
         
@@ -245,7 +245,7 @@ class MemberAdminUserListCustomizer {
     /**
      * Hämta aktiverade fält
      */
-    public function getEnabledFields(): array {
+    public function getEnabledFields() {
         $settings = get_option('member_admin_settings', ['enabled_fields' => []]);
         return $settings['enabled_fields'];
     }

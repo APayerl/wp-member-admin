@@ -18,7 +18,7 @@ class MemberAdminACFFieldManager {
     /**
      * Singleton pattern
      */
-    public static function getInstance(): MemberAdminACFFieldManager {
+    public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -35,7 +35,7 @@ class MemberAdminACFFieldManager {
     /**
      * Hämta alla ACF-fält som är kopplade till användare
      */
-    public function getUserACFFields(): array {
+    public function getUserACFFields() {
         $cachedFields = get_transient('member_admin_acf_fields');
         if ($cachedFields !== false) {
             return $cachedFields;
@@ -78,7 +78,7 @@ class MemberAdminACFFieldManager {
     /**
      * Kontrollera om en fältgrupp är kopplad till användare
      */
-    private function isUserFieldGroup(array $group): bool {
+    private function isUserFieldGroup($group) {
         if (!isset($group['location'])) {
             return false;
         }
@@ -97,7 +97,7 @@ class MemberAdminACFFieldManager {
     /**
      * Hämta värde för ACF-fält för en specifik användare
      */
-    public function getUserFieldValue(int $userId, string $fieldKey): mixed {
+    public function getUserFieldValue($userId, $fieldKey) {
         if (!function_exists('get_field')) {
             return null;
         }
@@ -108,7 +108,7 @@ class MemberAdminACFFieldManager {
     /**
      * Formatera ACF-fältvärde för visning i användar-listan
      */
-    public function formatFieldValue(mixed $value, array $field): string {
+    public function formatFieldValue($value, $field) {
         if (empty($value)) {
             return '—';
         }
@@ -228,7 +228,7 @@ class MemberAdminACFFieldManager {
     /**
      * Rensa cache för ACF-fält
      */
-    public function clearFieldsCache(): void {
+    public function clearFieldsCache() {
         delete_transient('member_admin_acf_fields');
     }
 } 

@@ -14,12 +14,12 @@ if (!defined('ABSPATH')) {
 class MemberAdminInterface {
     
     private static $instance = null;
-    private MemberAdminUserListCustomizer $customizer;
+    private $customizer;
     
     /**
      * Singleton pattern
      */
-    public static function getInstance(): MemberAdminInterface {
+    public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -37,7 +37,7 @@ class MemberAdminInterface {
     /**
      * Initialisera hooks
      */
-    private function init(): void {
+    private function init() {
         add_action('admin_head-users.php', [$this, 'addCustomizeButton']);
         add_action('admin_footer-users.php', [$this, 'addCustomizeModal']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
@@ -50,7 +50,7 @@ class MemberAdminInterface {
     /**
      * Lägg till anpassa-knapp på användarsidan
      */
-    public function addCustomizeButton(): void {
+    public function addCustomizeButton() {
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
@@ -76,7 +76,7 @@ class MemberAdminInterface {
     /**
      * Lägg till modal för anpassning
      */
-    public function addCustomizeModal(): void {
+    public function addCustomizeModal() {
         ?>
         <div id="member-admin-modal" class="member-admin-modal" style="display: none;">
             <div class="member-admin-modal-content">
@@ -245,7 +245,7 @@ class MemberAdminInterface {
     /**
      * Lägg till CSS och JavaScript
      */
-    public function enqueueAssets(string $hook): void {
+    public function enqueueAssets($hook) {
         if ($hook !== 'users.php') {
             return;
         }
@@ -257,7 +257,7 @@ class MemberAdminInterface {
     /**
      * Lägg till CSS för modal
      */
-    public function addModalCSS(): void {
+    public function addModalCSS() {
         ?>
         <style>
             .member-admin-modal {
@@ -364,7 +364,7 @@ class MemberAdminInterface {
     /**
      * AJAX: Hämta tillgängliga fält
      */
-    public function ajaxGetFields(): void {
+    public function ajaxGetFields() {
         check_ajax_referer('member_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
@@ -383,7 +383,7 @@ class MemberAdminInterface {
     /**
      * AJAX: Uppdatera aktiverade fält
      */
-    public function ajaxUpdateFields(): void {
+    public function ajaxUpdateFields() {
         check_ajax_referer('member_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
