@@ -171,28 +171,102 @@ class MemberAdminUserListCustomizer {
         
         $field = $acfFields[$fieldKey];
         
-        // Använd meta_query för att sortera efter ACF-fält
+        // Specialhantering för olika fälttyper
+        $this->setupSortingForFieldType($query, $field);
+    }
+    
+    /**
+     * Konfigurera sortering baserat på fälttyp
+     */
+    private function setupSortingForFieldType($query, $field) {
+        $fieldName = $field['name'];
+        $fieldType = $field['type'];
+        
+        // Grundläggande meta_query för att hantera tomma värden korrekt
         $metaQuery = [
             'relation' => 'OR',
-            [
-                'key' => $field['name'],
+            'exists_clause' => [
+                'key' => $fieldName,
                 'compare' => 'EXISTS'
             ],
-            [
-                'key' => $field['name'],
+            'not_exists_clause' => [
+                'key' => $fieldName,
                 'compare' => 'NOT EXISTS'
             ]
         ];
         
         $query->set('meta_query', $metaQuery);
-        $query->set('orderby', 'meta_value');
+        $query->set('meta_key', $fieldName);
         
-        // Hantera numerisk sortering för sifferfält
-        if ($field['type'] === 'number') {
-            $query->set('orderby', 'meta_value_num');
+        // Olika sorteringstyper baserat på fälttyp
+        switch ($fieldType) {
+            case 'number':
+                $query->set('orderby', 'meta_value_num');
+                break;
+                
+            case 'date_picker':
+                // ACF sparar datum som Ymd (20240315) vilket sorteras korrekt kronologiskt som string
+                // eftersom YYYYMMDD format naturligt sorteras i rätt ordning
+                $query->set('orderby', 'meta_value');
+                // Sätt tomma värden sist
+                $query->set('meta_query', [
+                    'relation' => 'OR',
+                    'exists_clause' => [
+                        'key' => $fieldName,
+                        'compare' => 'EXISTS',
+                        'value' => ''
+                    ],
+                    'not_exists_clause' => [
+                        'key' => $fieldName,
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]);
+                $query->set('orderby', [
+                    'exists_clause' => 'DESC',  // Existerande fält först
+                    'meta_value' => $query->get('order') ?: 'ASC'  // Sedan sortera datum
+                ]);
+                break;
+                
+            case 'date_time_picker':
+                // Datum-tid fält sorteras också som string (korrekt format från ACF)
+                $query->set('orderby', 'meta_value');
+                $query->set('meta_query', [
+                    'relation' => 'OR',
+                    'exists_clause' => [
+                        'key' => $fieldName,
+                        'compare' => 'EXISTS',
+                        'value' => ''
+                    ],
+                    'not_exists_clause' => [
+                        'key' => $fieldName,
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]);
+                $query->set('orderby', [
+                    'exists_clause' => 'DESC',
+                    'meta_value' => $query->get('order') ?: 'ASC'
+                ]);
+                break;
+                
+            case 'true_false':
+                // Boolean fält - 1/0 sorteras numeriskt
+                $query->set('orderby', 'meta_value_num');
+                break;
+                
+            case 'select':
+            case 'radio':
+            case 'text':
+            case 'email':
+            default:
+                // Standard string-sortering
+                $query->set('orderby', 'meta_value');
+                // Hantera tomma värden - sätt dem sist
+                $query->set('orderby', [
+                    'exists_clause' => 'DESC',
+                    'meta_value' => $query->get('order') ?: 'ASC'
+                ]);
+                break;
         }
-        
-        $query->set('meta_key', $field['name']);
     }
     
     /**
@@ -216,10 +290,21 @@ class MemberAdminUserListCustomizer {
                 font-size: 11px;
             }
             
+            /* Datum-kolumner behöver lite mer plats */
+            .column-member_admin_date_picker,
+            .column-member_admin_date_time_picker {
+                min-width: 100px;
+            }
+            
             /* Responsiv hantering */
             @media screen and (max-width: 782px) {
                 .member-admin-column {
                     max-width: 100px;
+                }
+                
+                .column-member_admin_date_picker,
+                .column-member_admin_date_time_picker {
+                    min-width: 90px;
                 }
             }
         </style>';

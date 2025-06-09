@@ -142,25 +142,25 @@ class MemberAdminACFFieldManager {
                 return $value ? __('Ja', 'member-admin') : __('Nej', 'member-admin');
                 
             case 'date_picker':
-                if (is_string($value)) {
-                    $date = DateTime::createFromFormat('Ymd', $value);
-                    if ($date !== false) {
-                        return $date->format('Y-m-d');
-                    }
-                }
-                return strval($value);
+                return $this->formatDateValue($value, 'Y-m-d');
                 
             case 'time_picker':
-                return strval($value);
-                
-            case 'date_time_picker':
-                if (is_string($value)) {
-                    $date = DateTime::createFromFormat('Y-m-d H:i:s', $value);
-                    if ($date !== false) {
-                        return $date->format('Y-m-d H:i');
+                if (is_string($value) && !empty($value)) {
+                    // Formatera tid
+                    $time = DateTime::createFromFormat('H:i:s', $value);
+                    if ($time !== false) {
+                        return $time->format('H:i');
+                    }
+                    // Försök utan sekunder
+                    $time = DateTime::createFromFormat('H:i', $value);
+                    if ($time !== false) {
+                        return $time->format('H:i');
                     }
                 }
-                return strval($value);
+                return empty($value) ? '—' : strval($value);
+                
+            case 'date_time_picker':
+                return $this->formatDateValue($value, 'Y-m-d H:i');
                 
             case 'image':
                 if (is_array($value) && isset($value['url'])) {
@@ -230,5 +230,73 @@ class MemberAdminACFFieldManager {
      */
     public function clearFieldsCache() {
         delete_transient('member_admin_acf_fields');
+    }
+    
+    /**
+     * Hjälpfunktion för att robust hantera datum-formatering
+     * 
+     * @param mixed $value Datum-värde från ACF
+     * @param string $outputFormat Önskat output-format
+     * @return string Formaterat datum eller fallback
+     */
+    private function formatDateValue($value, $outputFormat = 'Y-m-d') {
+        if (empty($value)) {
+            return '—';
+        }
+        
+        // Om värdet redan är ett timestamp
+        if (is_numeric($value)) {
+            return date($outputFormat, intval($value));
+        }
+        
+        if (!is_string($value)) {
+            return '—';
+        }
+        
+        // Vanliga ACF-format att försöka
+        $inputFormats = [
+            'Ymd',           // 20240315 (ACF standard)
+            'Y-m-d',         // 2024-03-15 
+            'd/m/Y',         // 15/03/2024
+            'm/d/Y',         // 03/15/2024
+            'Y-m-d H:i:s',   // 2024-03-15 14:30:00
+            'd.m.Y',         // 15.03.2024 (svenskt format)
+            'Y/m/d'          // 2024/03/15
+        ];
+        
+        foreach ($inputFormats as $format) {
+            $date = DateTime::createFromFormat($format, $value);
+            if ($date !== false) {
+                return $date->format($outputFormat);
+            }
+        }
+        
+        // Sista försök med strtotime
+        $timestamp = strtotime($value);
+        if ($timestamp !== false) {
+            return date($outputFormat, $timestamp);
+        }
+        
+        // Om inget fungerar, returnera originalvärdet
+        return strval($value);
+    }
+    
+    /**
+     * Debug-funktion för att logga datum-värden (använd endast för felsökning)
+     * 
+     * @param mixed $value Originalvärdet från ACF
+     * @param string $fieldKey ACF-fältets key
+     * @param int $userId Användar-ID
+     */
+    private function debugDateValue($value, $fieldKey, $userId) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf(
+                'Member Admin Debug - User %d, Field %s: Raw value = "%s" (type: %s)', 
+                $userId, 
+                $fieldKey, 
+                print_r($value, true), 
+                gettype($value)
+            ));
+        }
     }
 } 
