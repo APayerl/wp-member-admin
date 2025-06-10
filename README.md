@@ -3,9 +3,8 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.8+-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)
 ![License](https://img.shields.io/badge/License-GPL--2.0-green.svg)
-![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)
 
-Ett WordPress-plugin för att anpassa användar-listan med ACF-fält, kompatibelt med WordPress 6.8.1.
+Ett öppet källkods WordPress-plugin för att anpassa användar-listan med ACF-fält, kompatibelt med WordPress 6.8.1.
 
 ## 🚀 Funktioner
 
@@ -145,11 +144,15 @@ cp -r . /path/to/wordpress/wp-content/plugins/member-admin/
 
 ## 🤝 Bidra
 
+Detta är ett hobbyproject som utvecklas på fritiden. Om du vill bidra:
+
 1. Fork projektet
 2. Skapa en feature branch (`git checkout -b feature/ny-funktion`)
 3. Committa dina ändringar (`git commit -am 'Add: Ny funktion'`)
 4. Pusha till branchen (`git push origin feature/ny-funktion`)
 5. Öppna en Pull Request
+
+Kom ihåg att detta är ett sidoprojekt, så respektera att svarstider kan variera! 🙂
 
 ## 📝 Changelog
 
@@ -164,12 +167,23 @@ cp -r . /path/to/wordpress/wp-content/plugins/member-admin/
 
 GPL v2 or later - se [LICENSE](LICENSE) fil för detaljer.
 
-## 💬 Support
+## 💬 Community
 
-- 🐛 **Bug reports**: [GitHub Issues](https://github.com/apayerl/wp-member-admin/issues)
-- 💡 **Feature requests**: [GitHub Issues](https://github.com/apayerl/wp-member-admin/issues)
-- 📧 **Support**: Skapa en issue i projektets repository
+- 🐛 **Hittat en bug?**: Rapportera gärna via [GitHub Issues](https://github.com/apayerl/wp-member-admin/issues)
+- 💡 **Förslag på förbättringar?**: Dela dina idéer via [GitHub Issues](https://github.com/apayerl/wp-member-admin/issues)
+- 🤝 **Bidra**: Detta är ett öppet källkodsprojekt - alla bidrag är välkomna!
 
 ## ⭐ Gillar du pluginet?
 
-Om du tycker om Member Admin, ge det en stjärna på GitHub! ⭐ 
+Om Member Admin hjälper dig, ge det gärna en stjärna på GitHub! ⭐  
+Alla bidrag och feedback uppskattas i detta öppna källkodsprojekt.
+
+## ☕ Stöd projektet
+
+Detta plugin utvecklas på fritiden som ett hobby-projekt. Om det sparar tid för dig och du vill visa uppskattning:
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/payerl)
+
+[![Thanks.dev](https://img.shields.io/badge/Thanks.dev-💝-black)](https://thanks.dev/apayerl)
+
+Varje bidrag motiverar till fortsatt utveckling! 🙂 

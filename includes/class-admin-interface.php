@@ -211,6 +211,12 @@ class MemberAdminInterface {
                 
                 // Spara ändringar
                 $('#member-admin-save-btn').on('click', function() {
+                    const $saveBtn = $(this);
+                    const originalText = $saveBtn.text();
+                    
+                    // Visa laddningsindikator
+                    $saveBtn.prop('disabled', true).text('<?php echo esc_js(__('Sparar...', 'member-admin')); ?>');
+                    
                     const selectedFields = [];
                     $('input[name="member_admin_fields[]"]:checked').each(function() {
                         selectedFields.push($(this).val());
@@ -226,14 +232,25 @@ class MemberAdminInterface {
                         },
                         success: function(response) {
                             if (response.success) {
-                                $('#member-admin-modal').hide();
-                                location.reload(); // Ladda om sidan för att visa ändringarna
+                                // Visa framgångsmeddelande kort
+                                $saveBtn.text('<?php echo esc_js(__('Sparat!', 'member-admin')); ?>');
+                                
+                                setTimeout(function() {
+                                    $('#member-admin-modal').hide();
+                                    location.reload(); // Ladda om sidan för att visa ändringarna
+                                }, 800);
                             } else {
-                                alert('<?php echo esc_js(__('Ett fel uppstod vid sparning.', 'member-admin')); ?>');
+                                $saveBtn.prop('disabled', false).text(originalText);
+                                const errorMsg = response.data && response.data.message ? 
+                                    response.data.message : 
+                                    '<?php echo esc_js(__('Ett fel uppstod vid sparning.', 'member-admin')); ?>';
+                                alert(errorMsg);
                             }
                         },
-                        error: function() {
-                            alert('<?php echo esc_js(__('Ett fel uppstod vid sparning.', 'member-admin')); ?>');
+                        error: function(xhr, status, error) {
+                            $saveBtn.prop('disabled', false).text(originalText);
+                            console.error('AJAX Error:', status, error);
+                            alert('<?php echo esc_js(__('Ett fel uppstod vid sparning. Kontrollera konsolen för mer information.', 'member-admin')); ?>');
                         }
                     });
                 });

@@ -145,4 +145,20 @@ msgstr ""
 
 #: includes/class-admin-interface.php:413
 msgid "Kunde inte spara inställningar."
+msgstr ""
+
+#: member-admin.php:120
+msgid "Gillar du Member Admin?"
+msgstr ""
+
+#: member-admin.php:121
+msgid "Detta plugin utvecklas på fritiden. Om det hjälper dig, överväg att köpa en kaffe till utvecklaren!"
+msgstr ""
+
+#: member-admin.php:126
+msgid "Köp en kaffe"
+msgstr ""
+
+#: member-admin.php:129
+msgid "Thanks.dev"
 msgstr "" 

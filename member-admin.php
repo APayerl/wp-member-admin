@@ -113,6 +113,98 @@ class MemberAdmin {
         MemberAdminACFFieldManager::getInstance();
         MemberAdminUserListCustomizer::getInstance();
         MemberAdminInterface::getInstance();
+        
+        // Lägg till donation-banner
+        add_action('admin_notices', [$this, 'showDonationNotice']);
+        add_action('wp_ajax_member_admin_dismiss_donation', [$this, 'dismissDonationNotice']);
+        
+        // Lägg till donation-länkar på plugin-kortet
+        add_filter('plugin_action_links_' . plugin_basename(MEMBER_ADMIN_PLUGIN_FILE), [$this, 'addPluginActionLinks']);
+    }
+    
+    /**
+     * Visa donation-notice (kan stängas bort)
+     */
+    public function showDonationNotice() {
+        // Visa endast på användarsidan och för admins
+        $screen = get_current_screen();
+        if (!$screen || $screen->id !== 'users' || !current_user_can('manage_options')) {
+            return;
+        }
+        
+        // Kontrollera om användaren har stängt bort det (pausat i 2 månader)
+        $dismissedTime = get_user_meta(get_current_user_id(), 'member_admin_donation_dismissed', true);
+        if ($dismissedTime && (time() - $dismissedTime) < (2 * 30 * 24 * 60 * 60)) {
+            return; // Pausad i 2 månader
+        }
+        
+        // För testning - ta bort detta senare om du vill ha väntetid
+        // $installDate = get_option('member_admin_install_date');
+        // if (!$installDate || (time() - $installDate) < (3 * 24 * 60 * 60)) {
+        //     return;
+        // }
+        
+        ?>
+        <div class="notice notice-info is-dismissible" id="member-admin-donation-notice" style="border-left-color: #0073aa; background: #f0f8ff;">
+            <div style="display: flex; align-items: center; padding: 10px 0;">
+                <div style="margin-right: 15px; font-size: 24px;">☕</div>
+                <div style="flex: 1;">
+                    <p style="margin: 0; font-size: 14px;">
+                        <strong><?php _e('Gillar du Member Admin?', 'member-admin'); ?></strong><br>
+                        <?php _e('Detta plugin utvecklas på fritiden. Om det hjälper dig, överväg att köpa en kaffe till utvecklaren!', 'member-admin'); ?>
+                    </p>
+                </div>
+                <div style="margin-left: 15px;">
+                    <a href="https://buymeacoffee.com/payerl" target="_blank" class="button button-secondary" style="background: #FFDD00; border-color: #FFDD00; color: #000; text-decoration: none; margin-right: 10px;">
+                        ☕ <?php _e('Köp en kaffe', 'member-admin'); ?>
+                    </a>
+                    <a href="https://thanks.dev/apayerl" target="_blank" class="button button-secondary" style="background: #000; border-color: #000; color: #fff; text-decoration: none;">
+                        💝 <?php _e('Thanks.dev', 'member-admin'); ?>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                $('#member-admin-donation-notice').on('click', '.notice-dismiss', function() {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'member_admin_dismiss_donation',
+                            nonce: '<?php echo wp_create_nonce('member_admin_dismiss_donation'); ?>'
+                        }
+                    });
+                });
+            });
+        </script>
+        <?php
+    }
+    
+    /**
+     * Stäng av donation-notice (pausa i 2 månader)
+     */
+    public function dismissDonationNotice() {
+        check_ajax_referer('member_admin_dismiss_donation', 'nonce');
+        
+        if (current_user_can('manage_options')) {
+            update_user_meta(get_current_user_id(), 'member_admin_donation_dismissed', time());
+        }
+        
+        wp_die();
+    }
+    
+    /**
+     * Lägg till donation-länkar på plugin-kortet
+     */
+    public function addPluginActionLinks($links) {
+        $donationLinks = [
+            '<a href="https://buymeacoffee.com/payerl" target="_blank" style="color: #d63638; font-weight: bold;">☕ ' . __('Köp en kaffe', 'member-admin') . '</a>',
+            '<a href="https://thanks.dev/apayerl" target="_blank" style="color: #d63638; font-weight: bold;">💝 ' . __('Thanks.dev', 'member-admin') . '</a>'
+        ];
+        
+        return array_merge($links, $donationLinks);
     }
 }
 
@@ -148,6 +240,12 @@ function member_admin_activate() {
     if (!get_option('member_admin_settings')) {
         add_option('member_admin_settings', $defaultSettings);
     }
+    
+    // Spara installationsdatum för donation-banner
+    if (!get_option('member_admin_install_date')) {
+        add_option('member_admin_install_date', current_time('timestamp'));
+    }
+    
 }
 
 /**
