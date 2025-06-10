@@ -267,6 +267,43 @@ function member_admin_render_export_page() {
                 </div>
             </div>
             
+            <!-- Filtreringsinställningar -->
+            <div style="margin-top: 30px;">
+                <h2><?php _e('Filtrering av användare', 'member-admin'); ?></h2>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                    <div id="filter-container">
+                        <div class="filter-row" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <label style="min-width: 120px;"><?php _e('Filtrera på fält:', 'member-admin'); ?></label>
+                            <select name="filter_field" id="filter-field-select" style="min-width: 200px;">
+                                <option value=""><?php _e('Välj fält att filtrera på', 'member-admin'); ?></option>
+                                <optgroup label="<?php _e('WordPress-fält', 'member-admin'); ?>">
+                                    <?php member_admin_render_filter_wp_options(); ?>
+                                </optgroup>
+                                <?php if (class_exists('ACF') && function_exists('get_field')): ?>
+                                <optgroup label="<?php _e('ACF-fält', 'member-admin'); ?>">
+                                    <?php member_admin_render_filter_acf_options(); ?>
+                                </optgroup>
+                                <?php endif; ?>
+                            </select>
+                            <select name="filter_condition" id="filter-condition-select" style="min-width: 150px;">
+                                <option value="not_empty"><?php _e('Har ett värde', 'member-admin'); ?></option>
+                                <option value="empty"><?php _e('Är tomt', 'member-admin'); ?></option>
+                                <option value="equals"><?php _e('Är lika med', 'member-admin'); ?></option>
+                                <option value="contains"><?php _e('Innehåller', 'member-admin'); ?></option>
+                                <option value="starts_with"><?php _e('Börjar med', 'member-admin'); ?></option>
+                            </select>
+                            <input type="text" name="filter_value" id="filter-value-input" placeholder="<?php _e('Värde att filtrera på', 'member-admin'); ?>" style="min-width: 200px;">
+                            <select name="filter_value_select" id="filter-value-select" style="min-width: 200px; display: none;">
+                                <option value=""><?php _e('Välj värde', 'member-admin'); ?></option>
+                            </select>
+                        </div>
+                        <p class="description">
+                            <?php _e('Endast användare som matchar filtreringskriteriet kommer att exporteras. Lämna tomt för att exportera alla användare.', 'member-admin'); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Export-inställningar -->
             <div style="margin-top: 30px;">
                 <h2><?php _e('Export-inställningar', 'member-admin'); ?></h2>
@@ -329,6 +366,77 @@ function member_admin_render_export_page() {
         $('#select-none').on('click', function() {
             $('#wp-fields input[type="checkbox"], #acf-fields input[type="checkbox"]').prop('checked', false);
         });
+        
+        // Hantera filterfältets ändringar
+        $('#filter-field-select').on('change', function() {
+            var selectedField = $(this).val();
+            var conditionSelect = $('#filter-condition-select');
+            var valueInput = $('#filter-value-input');
+            var valueSelect = $('#filter-value-select');
+            
+            if (selectedField === '') {
+                conditionSelect.val('not_empty');
+                valueInput.hide();
+                valueSelect.hide();
+                return;
+            }
+            
+            // Visa/dölj värdefält baserat på villkor
+            updateFilterValueVisibility();
+            
+            // Ladda kända värden för fältet via AJAX
+            loadFieldValues(selectedField);
+        });
+        
+        // Hantera villkorsändringar
+        $('#filter-condition-select').on('change', function() {
+            updateFilterValueVisibility();
+        });
+        
+        function updateFilterValueVisibility() {
+            var condition = $('#filter-condition-select').val();
+            var valueInput = $('#filter-value-input');
+            var valueSelect = $('#filter-value-select');
+            
+            if (condition === 'empty' || condition === 'not_empty') {
+                valueInput.hide();
+                valueSelect.hide();
+            } else {
+                var selectedField = $('#filter-field-select').val();
+                if (selectedField && valueSelect.children().length > 1) {
+                    valueInput.hide();
+                    valueSelect.show();
+                } else {
+                    valueInput.show();
+                    valueSelect.hide();
+                }
+            }
+        }
+        
+        function loadFieldValues(fieldKey) {
+            var valueSelect = $('#filter-value-select');
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'member_admin_get_field_values',
+                    field_key: fieldKey,
+                    nonce: '<?php echo wp_create_nonce('member_admin_field_values'); ?>'
+                },
+                success: function(response) {
+                    if (response.success && response.data.length > 0) {
+                        valueSelect.empty().append('<option value=""><?php echo esc_js(__('Välj värde', 'member-admin')); ?></option>');
+                        
+                        $.each(response.data, function(index, value) {
+                            valueSelect.append('<option value="' + value + '">' + value + '</option>');
+                        });
+                        
+                        updateFilterValueVisibility();
+                    }
+                }
+            });
+        }
         
         // Validering innan submit
         $('#member-admin-export-form').on('submit', function(e) {
@@ -409,6 +517,50 @@ function member_admin_render_user_roles() {
 }
 
 /**
+ * Renderera WordPress-fält för filtrering
+ */
+function member_admin_render_filter_wp_options() {
+    $wpFields = member_admin_get_filterable_wp_fields();
+    
+    foreach ($wpFields as $key => $label) {
+        echo '<option value="wp_' . esc_attr($key) . '">' . esc_html($label) . '</option>';
+    }
+}
+
+/**
+ * Renderera ACF-fält för filtrering
+ */
+function member_admin_render_filter_acf_options() {
+    if (!class_exists('ACF') || !function_exists('get_field')) {
+        return;
+    }
+    
+    $fieldManager = MemberAdminACFFieldManager::getInstance();
+    $acfFields = $fieldManager->getUserACFFields();
+    
+    foreach ($acfFields as $key => $field) {
+        echo '<option value="acf_' . esc_attr($key) . '">' . esc_html($field['label']) . ' (' . esc_html($field['type']) . ')</option>';
+    }
+}
+
+/**
+ * Hämta filterbara WordPress-fält
+ */
+function member_admin_get_filterable_wp_fields() {
+    return [
+        'user_login' => __('Användarnamn', 'member-admin'),
+        'user_email' => __('E-post', 'member-admin'),
+        'display_name' => __('Visningsnamn', 'member-admin'),
+        'first_name' => __('Förnamn', 'member-admin'),
+        'last_name' => __('Efternamn', 'member-admin'),
+        'user_url' => __('Webbplats', 'member-admin'),
+        'description' => __('Biografisk info', 'member-admin'),
+        'locale' => __('Språk', 'member-admin'),
+        'roles' => __('Användarroller', 'member-admin')
+    ];
+}
+
+/**
  * Hämta WordPress standard-fält
  */
 function member_admin_get_wp_fields() {
@@ -437,6 +589,68 @@ function member_admin_get_wp_fields() {
 }
 
 /**
+ * AJAX-hanterare för att hämta kända fältvärden
+ */
+add_action('wp_ajax_member_admin_get_field_values', 'member_admin_ajax_get_field_values');
+function member_admin_ajax_get_field_values() {
+    // Kontrollera nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'member_admin_field_values')) {
+        wp_die(__('Säkerhetsverifiering misslyckades.', 'member-admin'));
+    }
+    
+    // Kontrollera behörighet
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Du har inte behörighet att utföra denna åtgärd.', 'member-admin'));
+    }
+    
+    $fieldKey = sanitize_text_field($_POST['field_key']);
+    $values = member_admin_get_unique_field_values($fieldKey);
+    
+    wp_send_json_success($values);
+}
+
+/**
+ * Hämta unika värden för ett fält
+ */
+function member_admin_get_unique_field_values($fieldKey) {
+    $values = [];
+    $users = get_users(['fields' => 'all']);
+    
+    foreach ($users as $user) {
+        if (strpos($fieldKey, 'wp_') === 0) {
+            // WordPress-fält
+            $wpField = substr($fieldKey, 3);
+            $value = member_admin_get_user_field_value($user, $wpField);
+        } elseif (strpos($fieldKey, 'acf_') === 0) {
+            // ACF-fält
+            $acfField = substr($fieldKey, 4);
+            $value = get_field($acfField, 'user_' . $user->ID);
+            
+            // Formatera värdet för visning
+            if (class_exists('ACF')) {
+                $fieldManager = MemberAdminACFFieldManager::getInstance();
+                $acfFields = $fieldManager->getUserACFFields();
+                if (isset($acfFields[$acfField])) {
+                    $value = member_admin_format_export_value($value, $acfFields[$acfField]);
+                }
+            }
+        } else {
+            continue;
+        }
+        
+        if (!empty($value) && !in_array($value, $values)) {
+            $values[] = $value;
+        }
+    }
+    
+    // Sortera värden
+    sort($values);
+    
+    // Begränsa till max 100 värden för prestanda
+    return array_slice($values, 0, 100);
+}
+
+/**
  * Hantera CSV-export (lägg till hook för detta)
  */
 add_action('admin_post_member_admin_export_users', 'member_admin_handle_export');
@@ -458,6 +672,17 @@ function member_admin_handle_export() {
     $delimiter = isset($_POST['csv_delimiter']) ? sanitize_text_field($_POST['csv_delimiter']) : ',';
     $charset = isset($_POST['charset']) ? sanitize_text_field($_POST['charset']) : 'UTF-8';
     
+    // Hämta filtreringsinställningar
+    $filterField = isset($_POST['filter_field']) ? sanitize_text_field($_POST['filter_field']) : '';
+    $filterCondition = isset($_POST['filter_condition']) ? sanitize_text_field($_POST['filter_condition']) : 'not_empty';
+    $filterValue = isset($_POST['filter_value']) ? sanitize_text_field($_POST['filter_value']) : '';
+    $filterValueSelect = isset($_POST['filter_value_select']) ? sanitize_text_field($_POST['filter_value_select']) : '';
+    
+    // Använd select-värde om det finns, annars input-värde
+    if (!empty($filterValueSelect)) {
+        $filterValue = $filterValueSelect;
+    }
+    
     // Konvertera \t till riktig tab
     if ($delimiter === '\t') {
         $delimiter = "\t";
@@ -469,23 +694,100 @@ function member_admin_handle_export() {
     }
     
     // Hämta användare
-    $users = member_admin_get_users_for_export($userRoles);
+    $users = member_admin_get_users_for_export($userRoles, $filterField, $filterCondition, $filterValue);
     
     // Generera CSV
     member_admin_generate_csv($users, $wpFields, $acfFields, $delimiter, $charset);
 }
 
 /**
- * Hämta användare baserat på roller
+ * Hämta användare baserat på roller och filtrering
  */
-function member_admin_get_users_for_export($userRoles) {
+function member_admin_get_users_for_export($userRoles, $filterField = '', $filterCondition = 'not_empty', $filterValue = '') {
     $args = ['fields' => 'all'];
     
     if (!in_array('all', $userRoles)) {
         $args['role__in'] = $userRoles;
     }
     
-    return get_users($args);
+    $users = get_users($args);
+    
+    // Applicera filtreringen om den är specificerad
+    if (!empty($filterField)) {
+        $users = member_admin_filter_users($users, $filterField, $filterCondition, $filterValue);
+    }
+    
+    return $users;
+}
+
+/**
+ * Filtrera användare baserat på fältkriterier
+ */
+function member_admin_filter_users($users, $filterField, $filterCondition, $filterValue) {
+    $filteredUsers = [];
+    
+    foreach ($users as $user) {
+        $fieldValue = member_admin_get_filter_field_value($user, $filterField);
+        
+        if (member_admin_matches_filter_condition($fieldValue, $filterCondition, $filterValue)) {
+            $filteredUsers[] = $user;
+        }
+    }
+    
+    return $filteredUsers;
+}
+
+/**
+ * Hämta fältvärde för filtrering
+ */
+function member_admin_get_filter_field_value($user, $filterField) {
+    if (strpos($filterField, 'wp_') === 0) {
+        // WordPress-fält
+        $wpField = substr($filterField, 3);
+        return member_admin_get_user_field_value($user, $wpField);
+    } elseif (strpos($filterField, 'acf_') === 0) {
+        // ACF-fält
+        $acfField = substr($filterField, 4);
+        $value = get_field($acfField, 'user_' . $user->ID);
+        
+        // Formatera värdet för jämförelse
+        if (class_exists('ACF')) {
+            $fieldManager = MemberAdminACFFieldManager::getInstance();
+            $acfFields = $fieldManager->getUserACFFields();
+            if (isset($acfFields[$acfField])) {
+                $value = member_admin_format_export_value($value, $acfFields[$acfField]);
+            }
+        }
+        
+        return $value;
+    }
+    
+    return '';
+}
+
+/**
+ * Kontrollera om ett värde matchar filtervillkoret
+ */
+function member_admin_matches_filter_condition($fieldValue, $condition, $filterValue) {
+    switch ($condition) {
+        case 'empty':
+            return empty($fieldValue);
+        
+        case 'not_empty':
+            return !empty($fieldValue);
+        
+        case 'equals':
+            return strcasecmp($fieldValue, $filterValue) === 0;
+        
+        case 'contains':
+            return stripos($fieldValue, $filterValue) !== false;
+        
+        case 'starts_with':
+            return stripos($fieldValue, $filterValue) === 0;
+        
+        default:
+            return false;
+    }
 }
 
 /**

@@ -465,20 +465,118 @@ class MemberAdminUserListCustomizer {
                 min-width: 120px;
             }
             
-            /* Responsiv hantering */
+            /* Responsiv hantering för mobil */
             @media screen and (max-width: 782px) {
-                .member-admin-editable-field {
-                    min-width: 100px;
+                /* WordPress mobilvy - justera layout för key-value visning */
+                table.wp-list-table .member-admin-editable-field {
+                    min-width: 0;
+                    width: 100%;
+                    display: block;
                 }
                 
+                /* Hantera WordPress key-value layout i mobil */
+                table.wp-list-table td.column-member_admin_* {
+                    display: block !important;
+                    width: 100% !important;
+                    text-align: left !important;
+                    border: none !important;
+                    padding: 8px 12px !important;
+                }
+                
+                /* Mobilspecifika justeringar för redigering */
                 .member-admin-edit {
-                    min-width: 150px;
+                    position: relative !important;
+                    min-width: 100% !important;
+                    width: 100% !important;
+                    left: 0 !important;
+                    top: 5px !important;
+                    margin-top: 5px;
                 }
                 
-                .column-member_admin_date_picker,
-                .column-member_admin_date_time_picker {
-                    min-width: 100px;
+                .member-admin-input {
+                    font-size: 16px !important; /* Förhindra zoom på iOS */
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                    min-height: 44px !important; /* Touch-vänlig storlek */
                 }
+                
+                .member-admin-actions {
+                    display: flex !important;
+                    gap: 5px !important;
+                    margin-top: 8px !important;
+                }
+                
+                .member-admin-save,
+                .member-admin-cancel {
+                    flex: 1 !important;
+                    min-height: 44px !important;
+                    font-size: 14px !important;
+                }
+                
+                /* Specifik hantering för WordPress mobilvy struktur */
+                @media screen and (max-width: 782px) {
+                    .wp-list-table tr:not(.inline-edit-row):not(.no-items) {
+                        position: relative;
+                    }
+                    
+                    /* WordPress använder td::before för labels i mobil */
+                    .wp-list-table td[data-colname] {
+                        display: block;
+                        width: auto !important;
+                    }
+                    
+                    /* Undvik konflikter med WordPress mobilvy */
+                    .wp-list-table .member-admin-editable-field {
+                        clear: both;
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    
+                    .wp-list-table .member-admin-display {
+                        display: block;
+                        width: 100%;
+                        min-height: 24px;
+                        line-height: 1.4;
+                    }
+                }
+            }
+            
+            /* Extra specifik för mycket små skärmar */
+            @media screen and (max-width: 480px) {
+                .member-admin-edit {
+                    font-size: 14px;
+                }
+                
+                .member-admin-input {
+                    font-size: 16px !important;
+                    padding: 8px !important;
+                }
+                
+                select.member-admin-input {
+                    min-height: 44px !important;
+                }
+            }
+            
+            /* Touch-specifika förbättringar */
+            .member-admin-touch-device .member-admin-display {
+                -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+                cursor: pointer;
+            }
+            
+            .member-admin-touch-device .member-admin-display:active {
+                background-color: #e0e0e0;
+            }
+            
+            .member-admin-touch-device .member-admin-save,
+            .member-admin-touch-device .member-admin-cancel {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            /* Mobil-meddelanden */
+            .member-admin-mobile-notice {
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }
         </style>';
     }
@@ -490,17 +588,43 @@ class MemberAdminUserListCustomizer {
         ?>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
-            // Klick för att starta redigering
-            $(document).on('click', '.member-admin-display', function() {
+            var isMobile = window.innerWidth <= 782;
+            
+            // Lyssna på resize för responsiv hantering
+            $(window).on('resize', function() {
+                isMobile = window.innerWidth <= 782;
+            });
+            
+            // Klick/touch för att starta redigering
+            $(document).on('click touchend', '.member-admin-display', function(e) {
+                e.preventDefault();
                 var $field = $(this).closest('.member-admin-editable-field');
                 if ($field.hasClass('member-admin-editing')) return;
+                
+                // Stäng alla andra öppna redigeringar först
+                $('.member-admin-editing').each(function() {
+                    if (this !== $field[0]) {
+                        cancelEdit($(this));
+                    }
+                });
                 
                 $field.addClass('member-admin-editing');
                 $(this).hide();
                 $field.find('.member-admin-edit').show();
                 
-                // Fokusera på första input
-                $field.find('.member-admin-input').first().focus();
+                // Fördröj fokusering något på mobil för att undvika problem
+                setTimeout(function() {
+                    var $input = $field.find('.member-admin-input').first();
+                    if (isMobile) {
+                        // På mobil, scrolla elementet i vy först
+                        $input[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(function() {
+                            $input.focus();
+                        }, 300);
+                    } else {
+                        $input.focus();
+                    }
+                }, 100);
             });
             
             // Avbryt redigering
@@ -529,12 +653,20 @@ class MemberAdminUserListCustomizer {
                 }
             });
             
-            // Stäng vid klick utanför
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.member-admin-editable-field').length) {
-                    $('.member-admin-editing').each(function() {
-                        cancelEdit($(this));
-                    });
+            // Stäng vid klick utanför (förbättrad för mobil)
+            $(document).on('click touchend', function(e) {
+                // Undvik att stänga om användaren interagerar med redigeringsområdet
+                if (!$(e.target).closest('.member-admin-editable-field, .ui-datepicker').length) {
+                    var $editing = $('.member-admin-editing');
+                    if ($editing.length > 0) {
+                        // På mobil, ge användaren mer tid att interagera
+                        var delay = isMobile ? 200 : 0;
+                        setTimeout(function() {
+                            $editing.each(function() {
+                                cancelEdit($(this));
+                            });
+                        }, delay);
+                    }
                 }
             });
             
@@ -609,14 +741,47 @@ class MemberAdminUserListCustomizer {
             }
             
             function showMessage(message, type) {
-                var $message = $('<div class="notice notice-' + type + ' is-dismissible"><p>' + message + '</p></div>');
-                $('.wrap h1').after($message);
+                // På mobil, visa meddelandet längst upp för bättre synlighet
+                var $target = isMobile ? $('body') : $('.wrap h1');
+                var $message = $('<div class="notice notice-' + type + ' is-dismissible member-admin-mobile-notice"><p>' + message + '</p></div>');
+                
+                if (isMobile) {
+                    $message.css({
+                        'position': 'fixed',
+                        'top': '32px', // Under admin bar
+                        'left': '0',
+                        'right': '0',
+                        'z-index': '999999',
+                        'margin': '0',
+                        'border-radius': '0'
+                    });
+                    $('body').prepend($message);
+                } else {
+                    $target.after($message);
+                }
                 
                 setTimeout(function() {
                     $message.fadeOut(function() {
                         $(this).remove();
                     });
-                }, 3000);
+                }, isMobile ? 4000 : 3000); // Längre tid på mobil
+            }
+            
+            // Förbättrad hantering för touch-enheter
+            if ('ontouchstart' in window) {
+                // Lägg till touch-klass för CSS-styling
+                $('body').addClass('member-admin-touch-device');
+                
+                // Förhindra dubbel-klickningar på touch-enheter
+                var touchTimeout;
+                $(document).on('touchend', '.member-admin-display, .member-admin-save, .member-admin-cancel', function(e) {
+                    clearTimeout(touchTimeout);
+                    var $this = $(this);
+                    
+                    touchTimeout = setTimeout(function() {
+                        // Touch-händelsen hanteras av click-hanterarna ovan
+                    }, 50);
+                });
             }
         });
         </script>
