@@ -161,4 +161,36 @@ msgstr ""
 
 #: member-admin.php:129
 msgid "Thanks.dev"
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Du har inte behörighet att utföra denna åtgärd."
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Du har inte behörighet att redigera denna användare."
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Fältet hittades inte."
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Fältet uppdaterat!"
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Kunde inte spara fältet."
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Fältet \"%s\" är obligatoriskt."
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Ange en giltig e-postadress."
+msgstr ""
+
+#: includes/class-user-list-customizer.php:XXX
+msgid "Ange en giltig URL."
 msgstr "" 

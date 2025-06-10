@@ -245,7 +245,7 @@ class MemberAdminACFFieldManager {
         }
         
         // Om värdet redan är ett timestamp
-        if (is_numeric($value)) {
+        if (is_numeric($value) && strlen($value) > 8) {
             return date($outputFormat, intval($value));
         }
         
@@ -253,31 +253,47 @@ class MemberAdminACFFieldManager {
             return '—';
         }
         
-        // Vanliga ACF-format att försöka
+        // Debug för att se vad vi får för värde
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Member Admin Date Debug: Raw value = "' . $value . '" (length: ' . strlen($value) . ')');
+        }
+        
+        // Vanliga ACF-format att försöka (Ymd först eftersom det är ACF standard)
         $inputFormats = [
-            'Ymd',           // 20240315 (ACF standard)
+            'Ymd',           // 20240315 (ACF standard för date_picker)
             'Y-m-d',         // 2024-03-15 
+            'Y-m-d H:i:s',   // 2024-03-15 14:30:00
             'd/m/Y',         // 15/03/2024
             'm/d/Y',         // 03/15/2024
-            'Y-m-d H:i:s',   // 2024-03-15 14:30:00
             'd.m.Y',         // 15.03.2024 (svenskt format)
             'Y/m/d'          // 2024/03/15
         ];
         
         foreach ($inputFormats as $format) {
             $date = DateTime::createFromFormat($format, $value);
-            if ($date !== false) {
-                return $date->format($outputFormat);
+            if ($date !== false && $date->format($format) === $value) {
+                $formatted = $date->format($outputFormat);
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("Member Admin Date Debug: Parsed '$value' as '$format' -> '$formatted'");
+                }
+                return $formatted;
             }
         }
         
-        // Sista försök med strtotime
+        // Sista försök med strtotime (men undvik gamla datum som 1970)
         $timestamp = strtotime($value);
-        if ($timestamp !== false) {
-            return date($outputFormat, $timestamp);
+        if ($timestamp !== false && $timestamp > strtotime('1990-01-01')) {
+            $formatted = date($outputFormat, $timestamp);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("Member Admin Date Debug: Used strtotime '$value' -> '$formatted'");
+            }
+            return $formatted;
         }
         
         // Om inget fungerar, returnera originalvärdet
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Member Admin Date Debug: Failed to parse '$value', returning as-is");
+        }
         return strval($value);
     }
     

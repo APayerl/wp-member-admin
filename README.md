@@ -120,6 +120,14 @@ member-admin/
 - Kontrollera att PHP-versionen är 7.4 eller senare
 - Se till att ACF är installerat
 
+### Avinstallation
+- **Avaktivera**: Temporär cache rensas
+- **Avinstallera**: Alla plugin-data rensas permanent, inklusive:
+  - Plugin-inställningar (`member_admin_settings`)
+  - Donation-banner inställningar per användare
+  - Cache och transients
+  - Installationsdatum
+
 ## 🛠️ Utveckling
 
 Pluginet använder Singleton-pattern för alla huvudklasser och följer WordPress plugin development best practices.

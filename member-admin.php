@@ -211,9 +211,10 @@ class MemberAdmin {
 // Starta plugin
 MemberAdmin::getInstance();
 
-// Aktiverings- och avaktiveringshooks
+// Aktiverings-, avaktiverings- och avinstallationshooks
 register_activation_hook(__FILE__, 'member_admin_activate');
 register_deactivation_hook(__FILE__, 'member_admin_deactivate');
+register_uninstall_hook(__FILE__, 'member_admin_uninstall');
 
 /**
  * Aktivering av plugin
@@ -254,4 +255,14 @@ function member_admin_activate() {
 function member_admin_deactivate() {
     // Rensa eventuella tillfälliga data
     delete_transient('member_admin_acf_fields');
+}
+
+/**
+ * Avinstallation av plugin
+ */
+function member_admin_uninstall() {
+    // Anropa uninstall.php för fullständig rensning
+    if (file_exists(dirname(__FILE__) . '/uninstall.php')) {
+        include_once dirname(__FILE__) . '/uninstall.php';
+    }
 } 
