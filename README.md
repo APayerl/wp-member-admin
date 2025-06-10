@@ -13,6 +13,8 @@ Ett öppet källkods WordPress-plugin för att anpassa användar-listan med ACF-
 - ✅ **Anpassa-knapp**: Enkel konfiguration direkt från användar-listan
 - ✅ **Typanpassad visning**: Fälten presenteras enligt sin ACF-typ
 - ✅ **Sorterbara kolumner**: Vissa fälttyper kan sorteras
+- ✅ **Inline-redigering**: Redigera ACF-fält direkt i användar-listan
+- ✅ **CSV-export**: Exportera användardata med valda fält till CSV
 - ✅ **Responsiv design**: Fungerar på både desktop och mobil
 
 ## 📋 Krav
@@ -48,6 +50,20 @@ git clone https://github.com/apayerl/wp-member-admin.git
 3. Välj vilka ACF-fält du vill visa som kolumner
 4. Klicka **"Spara ändringar"**
 5. Användar-listan kommer nu att visa de valda fälten som kolumner
+
+### Exportera användardata
+
+1. Gå till **Användare** → **Exportera Användare** i WordPress admin
+2. Välj vilka WordPress- och ACF-fält som ska inkluderas
+3. Välj användarroller som ska exporteras (standard: alla)
+4. Konfigurera CSV-inställningar (avgränsare, teckenuppsättning)
+5. Klicka **"Exportera CSV"** för att ladda ner filen
+
+### Inline-redigering
+
+1. Gå till **Användare** i WordPress admin
+2. Klicka på ett ACF-fält i listan för att redigera det direkte
+3. Tryck Enter för att spara eller Escape för att avbryta
 
 ## 🔧 ACF-fälttyper som stöds
 
@@ -149,6 +165,16 @@ cp -r . /path/to/wordpress/wp-content/plugins/member-admin/
 ### AJAX-endpoints
 - `member_admin_get_fields` - Hämtar tillgängliga fält
 - `member_admin_update_fields` - Uppdaterar aktiverade fält
+- `member_admin_inline_edit` - Sparar inline-redigering
+
+### Admin-sidor
+- `users.php` - Användar-lista med anpassade kolumner
+- `users.php?page=member-admin-export` - CSV-export av användardata
+
+### Export-funktioner
+- `member_admin_add_export_menu()` - Lägger till export-meny
+- `member_admin_handle_export()` - Hanterar CSV-export
+- `member_admin_generate_csv()` - Genererar CSV-fil
 
 ## 🤝 Bidra
 
@@ -169,7 +195,11 @@ Kom ihåg att detta är ett sidoprojekt, så respektera att svarstider kan varie
 - Anpassa användar-listan med ACF-fält
 - Modal interface för fältval
 - Stöd för alla vanliga ACF-fälttyper
-- Sorterbara kolumner
+- Sorterbara kolumner med pagination-konsistent sortering
+- Inline-redigering av ACF-fält direkt i användar-listan
+- CSV-export av användardata med valda WordPress- och ACF-fält
+- Donation-system med stängningsbar banner
+- Komplett avinstallationsstöd
 
 ## 📄 Licens
 

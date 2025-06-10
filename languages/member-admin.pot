@@ -193,4 +193,172 @@ msgstr ""
 
 #: includes/class-user-list-customizer.php:XXX
 msgid "Ange en giltig URL."
+msgstr ""
+
+#: includes/class-user-export.php:40
+msgid "Exportera Användare"
+msgstr ""
+
+#: includes/class-user-export.php:59
+msgid "Välj vilka fält som ska inkluderas i CSV-exporten och ladda ner användardata."
+msgstr ""
+
+#: includes/class-user-export.php:68
+msgid "WordPress Användarfält"
+msgstr ""
+
+#: includes/class-user-export.php:75
+msgid "ACF-fält"
+msgstr ""
+
+#: includes/class-user-export.php:83
+msgid "Inga ACF-fält hittades för användare."
+msgstr ""
+
+#: includes/class-user-export.php:XX
+msgid "ACF plugin krävs för att visa ACF-fält."
+msgstr ""
+
+#: includes/class-user-export.php:95
+msgid "Export-inställningar"
+msgstr ""
+
+#: includes/class-user-export.php:100
+msgid "Användarroller"
+msgstr ""
+
+#: includes/class-user-export.php:107
+msgid "CSV-avgränsare"
+msgstr ""
+
+#: includes/class-user-export.php:110
+msgid "Komma (,)"
+msgstr ""
+
+#: includes/class-user-export.php:111
+msgid "Semikolon (;)"
+msgstr ""
+
+#: includes/class-user-export.php:112
+msgid "Tab"
+msgstr ""
+
+#: includes/class-user-export.php:117
+msgid "Teckenuppsättning"
+msgstr ""
+
+#: includes/class-user-export.php:128
+msgid "Exportera CSV"
+msgstr ""
+
+#: includes/class-user-export.php:129
+msgid "Välj alla WP-fält"
+msgstr ""
+
+#: includes/class-user-export.php:130
+msgid "Välj alla ACF-fält"
+msgstr ""
+
+#: includes/class-user-export.php:131
+msgid "Avmarkera alla"
+msgstr ""
+
+#: includes/class-user-export.php:146
+msgid "Välj minst ett fält att exportera."
+msgstr ""
+
+#: includes/class-user-export.php:166
+msgid "Alla roller"
+msgstr ""
+
+#: includes/class-user-export.php:179
+msgid "Användar-ID"
+msgstr ""
+
+#: includes/class-user-export.php:180
+msgid "Användarnamn"
+msgstr ""
+
+#: includes/class-user-export.php:181
+msgid "E-post"
+msgstr ""
+
+#: includes/class-user-export.php:182
+msgid "Användarens trevliga namn"
+msgstr ""
+
+#: includes/class-user-export.php:183
+msgid "Webbplats"
+msgstr ""
+
+#: includes/class-user-export.php:184
+msgid "Registreringsdatum"
+msgstr ""
+
+#: includes/class-user-export.php:185
+msgid "Använderstatus"
+msgstr ""
+
+#: includes/class-user-export.php:186
+msgid "Visningsnamn"
+msgstr ""
+
+#: includes/class-user-export.php:187
+msgid "Förnamn"
+msgstr ""
+
+#: includes/class-user-export.php:188
+msgid "Efternamn"
+msgstr ""
+
+#: includes/class-user-export.php:189
+msgid "Smeknamn"
+msgstr ""
+
+#: includes/class-user-export.php:190
+msgid "Biografisk info"
+msgstr ""
+
+#: includes/class-user-export.php:191
+msgid "Rich Editor"
+msgstr ""
+
+#: includes/class-user-export.php:192
+msgid "Syntaxmarkering"
+msgstr ""
+
+#: includes/class-user-export.php:193
+msgid "Kommentarsgenvägar"
+msgstr ""
+
+#: includes/class-user-export.php:194
+msgid "Adminfärgschema"
+msgstr ""
+
+#: includes/class-user-export.php:195
+msgid "Använd SSL"
+msgstr ""
+
+#: includes/class-user-export.php:196
+msgid "Visa admin-bar fram"
+msgstr ""
+
+#: includes/class-user-export.php:197
+msgid "Språk"
+msgstr ""
+
+#: includes/class-user-export.php:198
+msgid "Användarroller"
+msgstr ""
+
+#: includes/class-user-export.php:206
+msgid "Säkerhetsverifiering misslyckades."
+msgstr ""
+
+#: includes/class-user-export.php:211
+msgid "Du har inte behörighet att utföra denna åtgärd."
+msgstr ""
+
+#: includes/class-user-export.php:226
+msgid "Inga fält valda för export."
 msgstr "" 
