@@ -1,8 +1,10 @@
 name: Version Check
 
 on:
+  # Kör på PR:s FRÅN vilken branch som helst TILL master eller develop
   pull_request:
     branches: [ master, develop ]
+  # Kör på pushes till develop (master hanteras av release-workflow)
   push:
     branches: [ develop ]
 
