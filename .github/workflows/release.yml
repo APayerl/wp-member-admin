@@ -1,0 +1,158 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    # Kör endast om det är en push till master ELLER manual workflow dispatch
+    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Behövs för att få alla taggar för versionshantering
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: zip
+        
+    - name: Beräkna nästa version
+      id: version
+      uses: paulhatch/semantic-version@v5.4.0
+      with:
+        tag_prefix: ""
+        major_pattern: "BREAKING CHANGE:"
+        minor_pattern: "feat:"
+        version_format: "${major}.${minor}.${patch}"
+        bump: ${{ github.event.inputs.version_bump || 'patch' }}
+        search_commit_body: false
+        
+    - name: Installera Composer beroenden för produktion
+      run: composer install --prefer-dist --no-dev --optimize-autoloader --no-progress
+      
+    - name: Uppdatera version i plugin-filen
+      run: |
+        # Uppdatera versionen i member-admin.php på BÅDA ställena
+        NEW_VERSION="${{ steps.version.outputs.version }}"
+        
+        # 1. Uppdatera plugin-header (WordPress läser denna)
+        sed -i "s/\* Version: .*/\* Version: $NEW_VERSION/" member-admin.php
+        
+        # 2. Uppdatera PHP-konstanten (koden använder denna)  
+        sed -i "s/define('MEMBER_ADMIN_VERSION', '.*');/define('MEMBER_ADMIN_VERSION', '$NEW_VERSION');/" member-admin.php
+        
+        echo "✅ Version uppdaterad till $NEW_VERSION"
+        echo "📋 Bump type: ${{ github.event.inputs.version_bump || 'patch' }}"
+        echo "📋 Föregående version: ${{ steps.version.outputs.previous_version }}"
+        echo "📋 Ny version: $NEW_VERSION"
+        
+        # Visa ändringarna - kontrollera att båda stämmmer
+        echo ""
+        echo "🔍 Verifierar versionskonsisstens:"
+        echo "Plugin header:"
+        grep -n "\* Version:" member-admin.php
+        echo "PHP konstant:"
+        grep -n "MEMBER_ADMIN_VERSION" member-admin.php
+        
+        # Verifiera att versionerna matchar
+        HEADER_VERSION=$(grep "Version:" member-admin.php | sed 's/.*Version: //')
+        CONST_VERSION=$(grep "MEMBER_ADMIN_VERSION" member-admin.php | sed "s/.*MEMBER_ADMIN_VERSION', '//" | sed "s/');.*//")
+        
+        if [ "$HEADER_VERSION" = "$CONST_VERSION" ]; then
+          echo "✅ Versionerna matchar: $HEADER_VERSION = $CONST_VERSION"
+        else
+          echo "❌ VERSIONSKONFLIK: Header=$HEADER_VERSION, Konstant=$CONST_VERSION"
+          exit 1
+        fi
+        
+    - name: Skapa och pusha git tag
+      uses: anothrNick/github-tag-action@1.67.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CUSTOM_TAG: ${{ steps.version.outputs.version }}
+        RELEASE_BRANCHES: master
+        
+    - name: Skapa release-arkiv
+      run: |
+        # Skapa release-katalog
+        mkdir -p release/member-admin
+        
+        # Kopiera produktionsfiler med uppdaterad version
+        cp -r includes/ release/member-admin/
+        cp -r languages/ release/member-admin/
+        cp member-admin.php release/member-admin/
+        cp README.md release/member-admin/
+        cp LICENSE release/member-admin/
+        cp uninstall.php release/member-admin/
+        
+        # Skapa ZIP-fil
+        cd release
+        zip -r member-admin.zip member-admin/
+        
+        echo "✅ Release-arkiv skapat för version ${{ steps.version.outputs.version }}"
+        
+    - name: Extrahera release-anteckningar
+      id: extract_notes
+      run: |
+        # Extrahera senaste versionen från CHANGELOG.md om den finns
+        if [ -f CHANGELOG.md ]; then
+          # Försök hitta anteckningar för den nya versionen
+          VERSION="${{ steps.version.outputs.version }}"
+          awk '/^## / { if (p) exit; if ($0 ~ /'"$VERSION"'/) p=1; next } p && /^## / { exit } p' CHANGELOG.md > release_notes.txt
+          
+          # Om inga anteckningar hittades, skapa standardtext
+          if [ ! -s release_notes.txt ]; then
+            echo "Automatisk ${{ github.event.inputs.version_bump || 'patch' }}-release för version $VERSION" > release_notes.txt
+            echo "" >> release_notes.txt
+            echo "Ändringar:" >> release_notes.txt
+            echo "- Automatisk versionsuppdatering från ${{ steps.version.outputs.previous_version }} till $VERSION" >> release_notes.txt
+          fi
+        else
+          echo "Automatisk ${{ github.event.inputs.version_bump || 'patch' }}-release för version ${{ steps.version.outputs.version }}" > release_notes.txt
+          echo "" >> release_notes.txt
+          echo "Ändringar:" >> release_notes.txt
+          echo "- Automatisk versionsuppdatering från ${{ steps.version.outputs.previous_version }} till ${{ steps.version.outputs.version }}" >> release_notes.txt
+        fi
+        
+        echo "📝 Release-anteckningar:"
+        cat release_notes.txt
+        
+    - name: Skapa GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: "Release v${{ steps.version.outputs.version }}"
+        files: release/member-admin.zip
+        body_path: release_notes.txt
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: WordPress.org Deploy
+      # Endast om det finns secrets för WordPress.org
+      if: ${{ secrets.SVN_USERNAME && secrets.SVN_PASSWORD }}
+      run: |
+        echo "🚀 Skulle deploya till WordPress.org här"
+        echo "SVN_USERNAME: ${{ secrets.SVN_USERNAME }}"
+        # Här skulle du lägga till SVN-kommandon för WordPress.org deploy 

@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<ruleset name="Member Admin Coding Standards">
+    <description>Kodstandarder för Member Admin WordPress plugin</description>
+
+    <!-- Kontrollera dessa filer och mappar -->
+    <file>.</file>
+
+    <!-- Exkludera vissa mappar och filer -->
+    <exclude-pattern>*/tests/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/languages/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+    
+    <!-- Använd WordPress kodstandarder -->
+    <rule ref="WordPress">
+        <!-- Tillåt korta array-syntax [] -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax.Found"/>
+        
+        <!-- Mindre stränga krav på filnamn -->
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+        
+        <!-- Tillåt mellanslag i array-deklarationer -->
+        <exclude name="WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound"/>
+        
+        <!-- Mindre strikta krav för template-filer -->
+        <exclude name="WordPress.Security.EscapeOutput.OutputNotEscaped"/>
+    </rule>
+
+    <!-- Använd WordPress-Docs standarder -->
+    <rule ref="WordPress-Docs"/>
+
+    <!-- Använd WordPress-Extra standarder men exkludera vissa regler -->
+    <rule ref="WordPress-Extra">
+        <!-- Tillåt korta ternary operatorer -->
+        <exclude name="WordPress.PHP.DisallowShortTernary.Found"/>
+        
+        <!-- Mindre stränga krav på variabelnamn -->
+        <exclude name="WordPress.NamingConventions.ValidVariableName.PropertyNotSnakeCase"/>
+        <exclude name="WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase"/>
+    </rule>
+
+    <!-- Kontrollera PHP-kompatibilitet -->
+    <rule ref="PHPCompatibility"/>
+    
+    <!-- Sätt minimum PHP-version -->
+    <config name="testVersion" value="7.4-"/>
+
+    <!-- Tillåt WordPress-specifika funktioner -->
+    <rule ref="WordPress.WP.GlobalVariablesOverride.Prohibited">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <!-- Specifika undantag för vårt plugin -->
+    <rule ref="WordPress.Security.NonceVerification.Recommended">
+        <exclude-pattern>*/includes/class-admin-interface.php</exclude-pattern>
+    </rule>
+
+    <!-- Visa förlopp -->
+    <arg value="p"/>
+    
+    <!-- Använd färger -->
+    <arg name="colors"/>
+    
+    <!-- Visa sniff-koder i output -->
+    <arg value="s"/>
+
+    <!-- Kontrollera endast PHP-filer -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Använd parallell bearbetning -->
+    <arg name="parallel" value="8"/>
+</ruleset> 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Member Admin
- * Plugin URI: https://yoursite.com
+ * Plugin URI: https://github.com/APayerl/wp-member-admin
  * Description: Anpassa användar-listan med ACF-fält för WordPress 6.8.1
  * Version: 1.0.0
  * Author: Anders Payerl
