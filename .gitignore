@@ -1,0 +1,53 @@
+# WordPress-specifika filer
+wp-config.php
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# Composer
+/vendor/
+composer.lock
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Test-filer och coverage
+/tests/coverage/
+phpunit.xml.dist
+.phpunit.result.cache
+
+# IDE-filer
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specifika filer
+.DS_Store
+Thumbs.db
+
+# Log-filer
+*.log
+error_log
+
+# Backup-filer
+*.bak
+*.tmp
+*.temp
+
+# WordPress test suite
+/tmp/wordpress-tests-lib/
+/tmp/wordpress/
+
+# Deployment-filer
+deploy.php
+.deployment
+.ftppass
+
+# Cache
+.cache/
+*.cache 

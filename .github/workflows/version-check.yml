@@ -1,0 +1,87 @@
+name: Version Check
+
+on:
+  # Kör på PR:s FRÅN vilken branch som helst TILL master eller develop
+  pull_request:
+    branches: [ master, develop ]
+  # Kör på pushes till develop (master hanteras av release-workflow)
+  push:
+    branches: [ develop ]
+
+jobs:
+  check-version:
+    name: Check Development Version
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      
+    - name: Kontrollera att utvecklingsversionen är 1.0.0
+      run: |
+        echo "🔍 Kontrollerar att utvecklingsversionen är 1.0.0..."
+        
+        # Hämta versionerna från båda ställena
+        HEADER_VERSION=$(grep "\* Version:" member-admin.php | sed 's/.*Version: //')
+        CONST_VERSION=$(grep "MEMBER_ADMIN_VERSION" member-admin.php | sed "s/.*MEMBER_ADMIN_VERSION', '//" | sed "s/');.*//")
+        
+        echo "📋 Plugin header version: $HEADER_VERSION"
+        echo "📋 PHP konstant version: $CONST_VERSION"
+        
+        # Kontrollera att plugin header är 1.0.0
+        if [ "$HEADER_VERSION" != "1.0.0" ]; then
+          echo "❌ Plugin header Version ska vara '1.0.0' i utvecklingsversionen"
+          echo "Hittade: $HEADER_VERSION"
+          exit 1
+        fi
+        
+        # Kontrollera att PHP konstant är 1.0.0
+        if [ "$CONST_VERSION" != "1.0.0" ]; then
+          echo "❌ MEMBER_ADMIN_VERSION ska vara '1.0.0' i utvecklingsversionen"
+          echo "Hittade: $CONST_VERSION"
+          exit 1
+        fi
+        
+        # Kontrollera att de matchar varandra
+        if [ "$HEADER_VERSION" != "$CONST_VERSION" ]; then
+          echo "❌ VERSIONSKONFLIK: Plugin header ($HEADER_VERSION) matchar inte PHP konstant ($CONST_VERSION)"
+          exit 1
+        fi
+        
+        echo "✅ Utvecklingsversionen är korrekt satt till 1.0.0 på båda ställena"
+        
+    - name: Hämta senaste tag för validering
+      id: latest_tag
+      uses: WyriHaximus/github-action-get-previous-tag@v1
+      continue-on-error: true
+      with:
+        fallback: '1.0.0'
+        
+    - name: Validera semver-format i taggar
+      run: |
+        # Om detta är en push till develop, kontrollera inte taggar
+        if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+          echo "✅ Skippar tag-validering för develop branch"
+          exit 0
+        fi
+        
+        # Kontrollera senaste taggen om den finns
+        if [ "${{ steps.latest_tag.outputs.tag }}" != "1.0.0" ]; then
+          TAG="${{ steps.latest_tag.outputs.tag }}"
+          
+          # Kontrollera att taggen inte har v-prefix
+          if echo "$TAG" | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$"; then
+            echo "❌ Tag '$TAG' har v-prefix, ska vara utan (ex: 1.0.1 istället för v1.0.1)"
+            exit 1
+          fi
+          
+          # Kontrollera att taggen följer semver
+          if ! echo "$TAG" | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$"; then
+            echo "❌ Tag '$TAG' följer inte semver-format (major.minor.patch)"
+            exit 1
+          fi
+          
+          echo "✅ Tag '$TAG' följer korrekt format"
+        else
+          echo "✅ Inga taggar att validera än"
+        fi 

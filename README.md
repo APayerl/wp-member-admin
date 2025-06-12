@@ -3,6 +3,9 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.8+-blue.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4+-purple.svg)
 ![License](https://img.shields.io/badge/License-GPL--2.0-green.svg)
+![Tests](https://github.com/apayerl/member-admin/workflows/Tests/badge.svg)
+![Codecov](https://codecov.io/gh/apayerl/member-admin/branch/master/graph/badge.svg)
+![Release](https://github.com/apayerl/member-admin/workflows/Release/badge.svg)
 
 Ett öppet källkods WordPress-plugin för att anpassa användar-listan med ACF-fält, kompatibelt med WordPress 6.8.1.
 
@@ -150,11 +153,63 @@ Pluginet använder Singleton-pattern för alla huvudklasser och följer WordPres
 
 ### Kör lokalt
 ```bash
-git clone https://github.com/apayerl/wp-member-admin.git
+git clone https://github.com/apayerl/member-admin.git
 cd member-admin
+
+# Installera utvecklings-beroenden
+composer install
+
+# Kör tester
+composer test
+
+# Kör kodstandarder
+composer run cs
+
 # Kopiera till din WordPress installation
 cp -r . /path/to/wordpress/wp-content/plugins/member-admin/
 ```
+
+### Testning
+
+Pluginet använder PHPUnit för automatiserad testning med WordPress test suite:
+
+```bash
+# Installera test-miljön (behöver MySQL)
+composer run install-wp-tests
+
+# Kör alla tester
+composer test
+
+# Kör tester med kod-täckning
+composer run test:coverage
+
+# Kontrollera kodstandarder
+composer run cs
+
+# Fixa kodstandarder automatiskt  
+composer run cs:fix
+```
+
+#### CI/CD Pipeline
+
+GitHub Actions kör automatiskt:
+- ✅ **Tester** på PHP 7.4-8.2 och WordPress 6.4-latest
+- ✅ **Kodstandarder** (WordPress Coding Standards)
+- ✅ **Säkerhetskontroll** med Composer audit
+- ✅ **Plugin-validering** och struktur-kontroll
+- ✅ **Integrationstest** med riktig WordPress-installation
+- ✅ **Kod-täckning** rapportering till Codecov
+- ✅ **Versionsvalidering** (utvecklingsversionen ska alltid vara 1.0.0)
+
+#### Release-strategi
+
+- **Utveckling**: Versionen är alltid `1.0.0` i källkoden
+- **Automatiska releases**: När PR:s mergas till `master` skapas automatiskt:
+  - Nästa semver-version (patch som standard)
+  - GitHub-tag utan `v`-prefix (ex: `1.0.1`)
+  - GitHub Release med ZIP-fil
+  - Uppdaterad version i build-artefakten
+- **Manuella releases**: Kan triggas via GitHub Actions med val av `major`/`minor`/`patch`
 
 ### Hooks som används
 - `manage_users_columns` - Lägger till kolumner

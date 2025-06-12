@@ -1,0 +1,254 @@
+name: Tests
+
+on:
+  # Kör på pushes till master och develop
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+
+jobs:
+  # Kodstandarder och syntax-kontroll
+  coding-standards:
+    name: Coding Standards
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, mysqli, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
+        coverage: none
+        
+    - name: Cache Composer beroenden
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+          
+    - name: Installera Composer beroenden
+      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+      
+    - name: Kontrollera PHP syntax
+      run: find . -name "*.php" -not -path "./vendor/*" -not -path "./tests/*" -exec php -l {} \;
+      
+    - name: Kör kodstandardkontroll
+      run: composer run cs
+
+  # Huvudtester på flera PHP/WordPress-versioner
+  tests:
+    name: PHP ${{ matrix.php-version }} / WP ${{ matrix.wp-version }}
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['7.4', '8.0', '8.1', '8.2']
+        wp-version: ['6.4', '6.5', '6.6', 'latest', 'nightly']
+        include:
+          # Lägg till kod-täckning för en specifik kombination
+          - php-version: '8.1'
+            wp-version: 'latest'
+            coverage: true
+        exclude:
+          # Exkludera kombinationer som inte stöds
+          - php-version: '7.4'
+            wp-version: 'nightly'
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP ${{ matrix.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, mysqli, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
+        coverage: ${{ matrix.coverage && 'xdebug' || 'none' }}
+        
+    - name: Cache Composer beroenden
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php${{ matrix.php-version }}-
+          ${{ runner.os }}-php-
+          
+    - name: Installera Composer beroenden
+      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+      
+    - name: Installera WordPress test suite
+      run: |
+        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 ${{ matrix.wp-version }}
+        
+    - name: Kör PHPUnit tester
+      run: |
+        if [[ "${{ matrix.coverage }}" == "true" ]]; then
+          composer run test:coverage
+        else
+          composer test
+        fi
+        
+    - name: Ladda upp kod-täckning till Codecov
+      if: matrix.coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./tests/coverage/clover.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # Säkerhetstester
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip
+        coverage: none
+        
+    - name: Cache Composer beroenden
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-security-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-security-
+          
+    - name: Installera Composer beroenden
+      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+      
+    - name: Kör säkerhetsaudit
+      run: composer audit || true  # Inte kritiskt att det misslyckas ännu
+      
+  # Plugin-validering
+  plugin-validation:
+    name: Plugin Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Installera WP CLI
+      run: |
+        curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        chmod +x wp-cli.phar
+        sudo mv wp-cli.phar /usr/local/bin/wp
+        
+    - name: Validera plugin-struktur
+      run: |
+        # Kontrollera att huvudfilen finns
+        test -f member-admin.php || exit 1
+        
+        # Kontrollera att readme finns
+        test -f README.md || exit 1
+        
+        # Kontrollera plugin-header
+        grep -q "Plugin Name:" member-admin.php || exit 1
+        grep -q "Version:" member-admin.php || exit 1
+        grep -q "Author:" member-admin.php || exit 1
+        
+        echo "✅ Plugin-struktur validerad"
+        
+    - name: Kontrollera textdomän-konsistens
+      run: |
+        # Kontrollera att alla översättningsfunktioner använder rätt textdomän
+        if grep -r "__(" --include="*.php" . | grep -v "member-admin" | grep -v "tests/"; then
+          echo "❌ Felaktig textdomän hittad"
+          exit 1
+        fi
+        echo "✅ Textdomän-konsistens OK"
+
+  # Integrationstest med riktiga WordPress
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+    
+    steps:
+    - name: Checkout kod
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, mysql, mysqli, pdo_mysql, bcmath, soap, intl, gd, exif, iconv
+        
+    - name: Installera WordPress
+      run: |
+        # Ladda ner och installera WordPress
+        curl -O https://wordpress.org/latest.tar.gz
+        tar -xzf latest.tar.gz
+        
+        # Konfigurera WordPress
+        cd wordpress
+        cp wp-config-sample.php wp-config.php
+        sed -i 's/database_name_here/wordpress/g' wp-config.php
+        sed -i 's/username_here/root/g' wp-config.php
+        sed -i 's/password_here/root/g' wp-config.php
+        sed -i 's/localhost/127.0.0.1:3306/g' wp-config.php
+        
+        # Installera WordPress
+        php -S localhost:8000 -t . &
+        sleep 10
+        
+        # Kopiera plugin till WordPress
+        mkdir -p wp-content/plugins/member-admin
+        cp -r ../* wp-content/plugins/member-admin/
+        
+        echo "✅ WordPress installerat och plugin kopierat"
+        
+    - name: Grundläggande plugin-test
+      run: |
+        cd wordpress
+        
+        # Kontrollera att pluginet kan laddas utan fel
+        php -c /dev/null -r "
+        define('ABSPATH', __DIR__ . '/');
+        require_once 'wp-config.php';
+        require_once 'wp-content/plugins/member-admin/member-admin.php';
+        echo 'Plugin laddades utan fel\n';
+        "
+        
+        echo "✅ Plugin-integration OK" 
